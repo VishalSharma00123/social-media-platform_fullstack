@@ -1,0 +1,10 @@
+{
+  "/(app)/discover/page": "app/(app)/discover/page.js",
+  "/(app)/feed/page": "app/(app)/feed/page.js",
+  "/(app)/messages/[conversationId]/page": "app/(app)/messages/[conversationId]/page.js",
+  "/(app)/messages/page": "app/(app)/messages/page.js",
+  "/(app)/notifications/page": "app/(app)/notifications/page.js",
+  "/(app)/profile/[username]/page": "app/(app)/profile/[username]/page.js",
+  "/(auth)/register/page": "app/(auth)/register/page.js",
+  "/page": "app/page.js"
+}
