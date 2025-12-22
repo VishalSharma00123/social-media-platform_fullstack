@@ -1,0 +1,6 @@
+# Declare files to be ignored by GitHub Language Statistics
+social-frontend/node_modules/* linguist-documentation
+social-frontend/.next/* linguist-documentation
+social-media-platform-server/uploads/* linguist-documentation
+package-lock.json linguist-generated
+social-frontend/package-lock.json linguist-generated
