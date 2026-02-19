@@ -39,6 +39,7 @@ public class MessageService {
     private final ConversationService conversationService; // ✅ Inject ConversationService
     private final UserServiceClient userServiceClient;
     private final SimpMessagingTemplate messagingTemplate;
+    private final org.springframework.kafka.core.KafkaTemplate<String, Object> kafkaTemplate;
 
     public MessageResponse sendMessage(String senderId, MessageRequest request) {
         log.info("Sending message from {} to {}", senderId, request.getReceiverId());
@@ -79,19 +80,42 @@ public class MessageService {
                 .build();
 
         try {
+            // ✅ Using /topic/chat/{userId} instead of convertAndSendToUser
+            // convertAndSendToUser relies on Spring's user destination resolver which
+            // silently drops messages when it can't resolve the user's session.
+            // Direct topic-based sending is more reliable.
+
             // Send to receiver
-            messagingTemplate.convertAndSendToUser(
-                    request.getReceiverId(),
-                    "/queue/messages",
+            log.info("📤 Sending WebSocket message to RECEIVER: {} at /topic/chat/{}", request.getReceiverId(),
+                    request.getReceiverId());
+            messagingTemplate.convertAndSend(
+                    "/topic/chat/" + request.getReceiverId(),
                     wsMessage);
+            log.info("✅ WebSocket message sent to receiver: {}", request.getReceiverId());
 
             // Send to sender (to sync across multiple tabs/devices)
-            messagingTemplate.convertAndSendToUser(
-                    senderId,
-                    "/queue/messages",
+            log.info("📤 Sending WebSocket message to SENDER: {} at /topic/chat/{}", senderId, senderId);
+            messagingTemplate.convertAndSend(
+                    "/topic/chat/" + senderId,
                     wsMessage);
+            log.info("✅ WebSocket message sent to sender: {}", senderId);
+
+            // ✅ Send Kafka event for Notification Service
+            com.message_service.message_service.event.MessageEvent event = com.message_service.message_service.event.MessageEvent
+                    .builder()
+                    .type("NEW_MESSAGE")
+                    .conversationId(conversation.getId())
+                    .senderId(senderId)
+                    .senderName(sender.getUsername())
+                    .receiverId(request.getReceiverId())
+                    .content(request.getContent())
+                    .build();
+
+            kafkaTemplate.send("message-events", event);
+            log.info("Kafka message event sent for conversation: {}", conversation.getId());
+
         } catch (Exception e) {
-            log.error("Failed to send WebSocket notification: {}", e.getMessage());
+            log.error("Failed to send WebSocket/Kafka notification: {}", e.getMessage(), e);
         }
 
         return response;
@@ -136,14 +160,12 @@ public class MessageService {
 
         try {
             // Send to receiver
-            messagingTemplate.convertAndSendToUser(
-                    message.getReceiverId(),
-                    "/queue/messages",
+            messagingTemplate.convertAndSend(
+                    "/topic/chat/" + message.getReceiverId(),
                     wsMessage);
             // Send back to sender (in case they have multiple sessions/tabs)
-            messagingTemplate.convertAndSendToUser(
-                    message.getSenderId(),
-                    "/queue/messages",
+            messagingTemplate.convertAndSend(
+                    "/topic/chat/" + message.getSenderId(),
                     wsMessage);
         } catch (Exception e) {
             log.error("Failed to send WebSocket delete notification: {}", e.getMessage());

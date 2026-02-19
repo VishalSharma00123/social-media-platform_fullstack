@@ -54,71 +54,63 @@ export default function FeedPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                <div className="w-12 h-12 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin" />
+                <div className="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
                 <p className="text-surface-500 font-bold uppercase tracking-widest text-xs">Curating your feed...</p>
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="lg:col-span-2 space-y-8">
                 <CreatePost onPostCreated={() => loadFeed(0)} />
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {posts.length > 0 ? (
-                        posts.map((post) => (
-                            <PostCard key={post.id} post={post} onUpdate={handlePostUpdate} />
+                        posts.map((post, idx) => (
+                            <div key={post.id} className={`stagger-${(idx % 3) + 1}`}>
+                                <PostCard post={post} onUpdate={handlePostUpdate} />
+                            </div>
                         ))
                     ) : (
-                        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-surface-200">
-                            <span className="text-4xl block mb-4">🏠</span>
-                            <p className="text-surface-500 font-medium">Your feed is quiet. Try following some people!</p>
-                            <Link href="/discover" className="mt-4 inline-block btn-primary px-6 py-2 rounded-full text-sm">
-                                Find People
+                        <div className="text-center py-24 glass-card border-dashed bg-surface-100/50">
+                            <div className="w-20 h-20 bg-surface-200 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-inner">
+                                🏠
+                            </div>
+                            <h3 className="text-xl font-black text-white mb-2">Your feed is a bit quiet</h3>
+                            <p className="text-surface-400 font-medium max-w-sm mx-auto mb-8">Follow some interesting people to see what they're sharing and start the conversation!</p>
+                            <Link href="/discover" className="btn-primary inline-flex items-center space-x-2 shadow-lg shadow-primary-900/20">
+                                <span>Find People</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
                             </Link>
                         </div>
                     )}
                 </div>
 
                 {hasMore && (
-                    <div className="text-center mt-12 pb-12">
+                    <div className="text-center py-12">
                         <button
                             onClick={loadMore}
-                            className="px-8 py-3 bg-white border border-surface-200 text-surface-600 font-bold rounded-full hover:bg-primary-50 hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm active:scale-95"
+                            className="bg-surface-100 hover:bg-surface-200 text-white border border-surface-200 px-10 py-3.5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-sm hover:shadow-md active:scale-95"
                         >
-                            Load More Posts
+                            Load More Magic
                         </button>
                     </div>
                 )}
             </div>
 
-            <div className="hidden lg:block space-y-6">
+            <div className="hidden lg:block space-y-8">
                 <SuggestedUsers />
 
-                <div className="card p-6 bg-white border-surface-100 shadow-sm">
-                    <h3 className="font-black text-surface-900 text-xs uppercase tracking-widest mb-4">Trending</h3>
-                    <div className="space-y-4">
-                        {['#WorldNews', '#Technology', '#Sport', '#Design'].map(tag => (
-                            <div key={tag} className="cursor-pointer group">
-                                <p className="text-sm font-bold text-surface-800 group-hover:text-primary-600 transition-colors">{tag}</p>
-                                <p className="text-[10px] text-surface-400 font-bold tracking-tight">2.4k Posts</p>
-                            </div>
-                        ))}
+                <div className="px-6 text-[10px] text-surface-500 font-bold uppercase tracking-[0.2em] space-y-3 opacity-60 hover:opacity-100 transition-opacity">
+                    <div className="flex space-x-4">
+                        <span className="hover:text-primary-500 cursor-pointer transition-colors">Privacy</span>
+                        <span className="hover:text-primary-500 cursor-pointer transition-colors">Terms</span>
+                        <span className="hover:text-primary-500 cursor-pointer transition-colors">Safety</span>
                     </div>
-                </div>
-
-                <div className="px-4 text-[10px] text-surface-400 font-bold uppercase tracking-wider space-y-1">
-                    <p>© 2024 SOCIAL MEDIA</p>
-                    <div className="flex space-x-3">
-                        <span className="hover:underline cursor-pointer">Privacy</span>
-                        <span className="hover:underline cursor-pointer">Terms</span>
-                        <span className="hover:underline cursor-pointer">Safety</span>
-                    </div>
+                    <p className="opacity-50">© 2026 SOCIAL UNIVERSE</p>
                 </div>
             </div>
         </div>
     );
 }
-
-

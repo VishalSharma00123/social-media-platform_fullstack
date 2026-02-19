@@ -1,16 +1,31 @@
 server:
   port: 8761
 
+spring:
+  application:
+    name: eureka-server
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.data.redis.RedisReactiveHealthContributorAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.redis.RedisHealthContributorAutoConfiguration
+
 eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
-  instance:
-    prefer-ip-address: false  # ← Change from true to false
-    hostname: localhost       # ← Add this
-    instance-id: ${spring.application.name}:${server.port}  # ← Add this
+  server:
+    enable-self-preservation: false
 
-
-spring:
-  application:
-    name: eureka-server
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  health:
+    redis:
+      enabled: false

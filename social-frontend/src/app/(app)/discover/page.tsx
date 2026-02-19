@@ -61,9 +61,9 @@ export default function DiscoverPage() {
     };
 
     const UserCard = ({ user }: { user: User }) => (
-        <div className="card p-4 flex items-center justify-between hover:bg-surface-50 transition-all border-surface-100 mb-3 bg-white">
-            <Link href={`/profile/${user.username}`} className="flex items-center space-x-4 flex-grow">
-                <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold overflow-hidden border-2 border-white shadow-sm">
+        <div key={user.id} className="p-4 rounded-2xl bg-surface-100 border border-surface-200 shadow-sm flex items-center justify-between hover:bg-surface-200 transition-all mb-3 animate-in fade-in slide-in-from-bottom-2">
+            <Link href={`/profile/${user.username}`} className="flex items-center space-x-4 flex-grow group">
+                <div className="w-12 h-12 rounded-full bg-surface-200 flex items-center justify-center text-primary-500 font-bold overflow-hidden border-2 border-surface-300 shadow-sm relative group-hover:scale-105 transition-transform">
                     {user.profilePicture ? (
                         <img src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:8082${user.profilePicture}`} alt={user.username} className="w-full h-full object-cover" />
                     ) : (
@@ -71,7 +71,7 @@ export default function DiscoverPage() {
                     )}
                 </div>
                 <div>
-                    <h3 className="font-bold text-surface-900 leading-tight">{user.fullName || user.username}</h3>
+                    <h3 className="font-bold text-surface-900 leading-tight group-hover:text-primary-500 transition-colors">{user.fullName || user.username}</h3>
                     <p className="text-sm text-surface-500">@{user.username}</p>
                     <p className="text-xs text-surface-400 mt-0.5">{user.followersCount} followers</p>
                 </div>
@@ -80,9 +80,9 @@ export default function DiscoverPage() {
             {user.username !== currentUser?.username && (
                 <button
                     onClick={() => handleFollow(user.id)}
-                    className={`px-5 py-1.5 rounded-full text-xs font-bold transition-all ${user.isFollowing
-                            ? "bg-surface-100 text-surface-600 hover:bg-surface-200"
-                            : "bg-primary-600 text-white hover:bg-primary-700 shadow-sm"
+                    className={`px-5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-lg ${user.isFollowing
+                        ? "bg-surface-200 text-surface-500 hover:bg-surface-300"
+                        : "bg-primary-600 text-white hover:bg-primary-500 shadow-primary-500/30"
                         }`}
                 >
                     {user.isFollowing ? "Following" : "Follow"}
@@ -93,24 +93,24 @@ export default function DiscoverPage() {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 h-full">
-            <div className="card p-6 bg-primary-600 text-white shadow-xl border-none relative overflow-hidden">
-                <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 to-primary-800 p-8 text-white shadow-2xl">
+                <div className="absolute top-[-50%] right-[-10%] w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse-glow" />
                 <div className="relative z-10">
-                    <h1 className="text-3xl font-black tracking-tight mb-2">Discover People</h1>
-                    <p className="text-primary-100 font-medium">Find your friends and build your community</p>
+                    <h1 className="text-4xl font-black tracking-tighter mb-2">Discover People</h1>
+                    <p className="text-primary-100 font-medium text-lg">Find your friends and build your community</p>
 
-                    <form onSubmit={handleSearch} className="mt-6 relative flex items-center max-w-xl">
+                    <form onSubmit={handleSearch} className="mt-8 relative flex items-center max-w-xl">
+                        <span className="absolute left-5 text-primary-300 text-xl">🔍</span>
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search by name or username..."
-                            className="w-full pl-12 pr-4 py-3.5 bg-white text-surface-900 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/20 shadow-lg text-sm"
+                            className="w-full pl-14 pr-32 py-4 bg-surface-900/10 backdrop-blur-sm border border-white/10 text-white placeholder-primary-200/70 rounded-2xl focus:outline-none focus:ring-4 focus:ring-white/20 shadow-inner text-base transition-all"
                         />
-                        <span className="absolute left-4 text-surface-400 text-xl">🔍</span>
                         <button
                             type="submit"
-                            className="absolute right-2 px-4 py-2 bg-primary-600 text-white rounded-xl font-bold text-xs hover:bg-primary-700 transition-colors"
+                            className="absolute right-2 px-6 py-2.5 bg-white text-primary-900 rounded-xl font-bold text-sm hover:bg-surface-100 transition-colors shadow-lg"
                         >
                             Search
                         </button>
@@ -118,67 +118,49 @@ export default function DiscoverPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                    {searchQuery && (
-                        <div className="animate-in">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-black text-surface-900 tracking-tight flex items-center">
-                                    Search Results
-                                    {loading && <span className="ml-3 animate-spin text-primary-600 text-sm">◌</span>}
-                                </h2>
-                                <button onClick={() => setSearchResults([])} className="text-xs font-bold text-surface-400 hover:text-primary-600">Clear</button>
+            <div className="space-y-6">
+                {searchQuery && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4">
+                        <div className="flex items-center justify-between mb-4 px-2">
+                            <h2 className="text-xl font-black text-surface-900 tracking-tight flex items-center">
+                                Search Results
+                                {loading && <span className="ml-3 animate-spin text-primary-500 text-sm">◌</span>}
+                            </h2>
+                            <button onClick={() => setSearchResults([])} className="text-xs font-bold text-surface-400 hover:text-primary-500 transition-colors uppercase tracking-widest">Clear Results</button>
+                        </div>
+                        {searchResults.length > 0 ? (
+                            <div className="grid gap-3">
+                                {searchResults.map(user => <UserCard key={user.id} user={user} />)}
                             </div>
-                            {searchResults.length > 0 ? (
-                                <div className="space-y-1">
-                                    {searchResults.map(user => <UserCard key={user.id} user={user} />)}
-                                </div>
-                            ) : (
-                                !loading && <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-surface-200">
-                                    <p className="text-surface-400 font-medium">No users found matching "{searchQuery}"</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                        ) : (
+                            !loading && <div className="text-center py-16 bg-surface-100 rounded-3xl border border-dashed border-surface-200">
+                                <span className="text-4xl grayscale opacity-30 mb-2 block">🤷‍♂️</span>
+                                <p className="text-surface-400 font-medium">No users found matching &quot;{searchQuery}&quot;</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-black text-surface-900 tracking-tight">Suggested for you</h2>
-                        <div className="space-y-1">
-                            {suggestions.length > 0 ? (
-                                suggestions.map(user => <UserCard key={user.id} user={user} />)
-                            ) : (
-                                <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-surface-200">
-                                    <p className="text-surface-400 font-medium">Looking for people to suggest...</p>
-                                </div>
-                            )}
-                        </div>
+                <div className="space-y-4">
+                    <h2 className="text-xl font-black text-surface-900 tracking-tight px-2">Suggested for you</h2>
+                    <div className="grid gap-3">
+                        {suggestions.length > 0 ? (
+                            suggestions.map(user => <UserCard key={user.id + "_sugg"} user={user} />)
+                        ) : (
+                            <div className="text-center py-16 bg-surface-100 rounded-3xl border border-dashed border-surface-200">
+                                <p className="text-surface-400 font-medium">Looking for people to suggest...</p>
+                            </div>
+                        )}
                     </div>
                 </div>
+            </div>
 
-                <div className="space-y-6">
-                    <div className="card p-6 bg-white border-surface-200 shadow-sm">
-                        <h3 className="font-black text-surface-900 text-sm uppercase tracking-widest mb-4">Trending Today</h3>
-                        <div className="space-y-4">
-                            {['#ReactJS', '#NextJS', '#TailwindCSS', '#FullStack'].map(tag => (
-                                <div key={tag} className="group cursor-pointer">
-                                    <p className="text-sm font-bold text-surface-900 group-hover:text-primary-600 transition-colors">{tag}</p>
-                                    <p className="text-[10px] text-surface-400 font-bold uppercase tracking-tighter">1.2k posts</p>
-                                </div>
-                            ))}
-                        </div>
-                        <button className="w-full mt-6 py-2 text-xs font-bold text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
-                            Show more
-                        </button>
-                    </div>
-
-                    <div className="text-[10px] text-surface-400 px-2 space-y-1">
-                        <p>© 2024 SOCIAL MEDIA INC.</p>
-                        <div className="flex space-x-2">
-                            <span className="hover:underline cursor-pointer">Privacy</span>
-                            <span className="hover:underline cursor-pointer">Terms</span>
-                            <span className="hover:underline cursor-pointer">Help</span>
-                        </div>
-                    </div>
+            <div className="text-[10px] text-surface-500 px-2 space-y-2 text-center mt-12 pb-8 opacity-60 hover:opacity-100 transition-opacity">
+                <p className="font-bold tracking-widest uppercase">© 2026 Social Media Inc.</p>
+                <div className="flex justify-center space-x-4 font-medium">
+                    <span className="hover:text-primary-500 cursor-pointer transition-colors">Privacy</span>
+                    <span className="hover:text-primary-500 cursor-pointer transition-colors">Terms</span>
+                    <span className="hover:text-primary-500 cursor-pointer transition-colors">Help</span>
                 </div>
             </div>
         </div>

@@ -22,6 +22,8 @@ spring:
     mongodb:
       uri: mongodb://admin:password123@localhost:27017/social_media_messages?authSource=admin
       auto-index-creation: true
+  kafka:
+    bootstrap-servers: localhost:9094
 
 jwt:
   secret: bXlTZWNyZXRLZXlGb3JKV1RTaG91bGRCZVZlcnlMb25nQW5kU2VjdXJlMTIzNDU2Nzg5MA==
@@ -35,8 +37,7 @@ eureka:
     fetch-registry: true
     registry-fetch-interval-seconds: 5
   instance:
-    hostname: localhost
-    prefer-ip-address: false
+    prefer-ip-address: true
     instance-id: ${spring.application.name}:${server.port}
     lease-renewal-interval-in-seconds: 5
     lease-expiration-duration-in-seconds: 10

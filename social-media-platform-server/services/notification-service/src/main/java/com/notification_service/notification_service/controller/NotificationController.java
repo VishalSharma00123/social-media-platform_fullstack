@@ -46,7 +46,7 @@ public class NotificationController {
 
         // Add validation
         if (userId == null || userId.isEmpty()) {
-            return ResponseEntity.badRequest().build();  // Return proper error response
+            return ResponseEntity.badRequest().build(); // Return proper error response
         }
 
         Pageable pageable = PageRequest.of(page, size);
@@ -75,6 +75,23 @@ public class NotificationController {
             @RequestHeader(value = "X-User-Id", required = false) String userId) {
 
         notificationService.markAllAsRead(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{notificationId}")
+    public ResponseEntity<Void> deleteNotification(
+            @PathVariable String notificationId,
+            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+
+        notificationService.deleteNotification(notificationId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllNotifications(
+            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+
+        notificationService.deleteAllNotifications(userId);
         return ResponseEntity.ok().build();
     }
 

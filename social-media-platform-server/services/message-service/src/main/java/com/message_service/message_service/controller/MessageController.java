@@ -1,8 +1,6 @@
 package com.message_service.message_service.controller;
 
 // MessageController.java
-import com.message_service.message_service.model.Message;
-import com.message_service.message_service.repository.MessageRepository;
 import com.message_service.message_service.service.ConversationService;
 import com.message_service.message_service.dto.MessageRequest;
 import com.message_service.message_service.dto.MessageResponse;
@@ -12,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,8 +37,6 @@ public class MessageController {
 
     private final MessageService messageService;
 
-    private final MessageRepository messageRepository;
-
     private static final String UPLOAD_DIR = "uploads/messages/";
 
     // ✅ Add constructor to create directory
@@ -59,48 +54,50 @@ public class MessageController {
     public ResponseEntity<MessageResponse> sendMessage(
             @AuthenticationPrincipal String senderId,
             @Valid @RequestBody MessageRequest request) {
+        log.info("📩 MessageController: sendMessage called. SenderId from Token: {}", senderId);
+        log.info("   Target ReceiverId: {}", request.getReceiverId());
         MessageResponse response = messageService.sendMessage(senderId, request);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/messages/{filename}")
-    public ResponseEntity<Resource> getImage(
-            @PathVariable String filename,
-            @AuthenticationPrincipal String userId) { // ✅ Authentication required!
+    @GetMapping("/media/{filename}")
+    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
 
-        log.info("📷 Image request: {} by user: {}", filename, userId);
+        log.info("📷 Media request: {}", filename);
 
-        // 1. Find message with this image
-        String fullUrl = "http://MESSAGE-SERVICE/uploads/messages/" + filename;
-        Message message = messageRepository.findByMediaUrl(fullUrl)
-                .orElse(null);
-
-        if (message == null) {
-            log.warn("⚠️ Image not found: {}", filename);
-            return ResponseEntity.notFound().build();
-        }
-
-        // 2. Check authorization (only sender or receiver can view)
-        if (!message.getSenderId().equals(userId) &&
-                !message.getReceiverId().equals(userId)) {
-            log.warn("🚫 Unauthorized access attempt by user {} for image {}", userId, filename);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        // 3. Return file if authorized
+        // Serve the file directly - endpoint is public, filenames are UUIDs
+        // (unguessable)
         Path filePath = Paths.get(UPLOAD_DIR + filename);
-        org.springframework.core.io.Resource resource = new FileSystemResource(filePath);
+        Resource resource = new FileSystemResource(filePath);
 
         if (!resource.exists()) {
-            log.error("❌ File not found on disk: {}", filePath);
+            log.warn("❌ File not found on disk: {}", filePath);
             return ResponseEntity.notFound().build();
         }
 
-        log.info("✅ Authorized access by user {} to image {}", userId, filename);
+        log.info("✅ Serving media file: {}", filename);
 
+        String contentType = getContentType(filename);
         return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG) // Adjust based on file type
+                .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
+    }
+
+    private String getContentType(String filename) {
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".png"))
+            return "image/png";
+        if (lower.endsWith(".gif"))
+            return "image/gif";
+        if (lower.endsWith(".webp"))
+            return "image/webp";
+        if (lower.endsWith(".mp4"))
+            return "video/mp4";
+        if (lower.endsWith(".webm"))
+            return "video/webm";
+        if (lower.endsWith(".mov"))
+            return "video/quicktime";
+        return "image/jpeg"; // default
     }
 
     @PostMapping("/send-with-media")
@@ -145,7 +142,7 @@ public class MessageController {
                 Path filePath = Paths.get(UPLOAD_DIR + filename);
                 Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-                mediaUrl = "/api/messages/messages/" + filename;
+                mediaUrl = "/api/messages/media/" + filename;
 
                 log.info("✅ File uploaded successfully: {}", filename);
                 log.info("   Size: {} bytes", file.getSize());

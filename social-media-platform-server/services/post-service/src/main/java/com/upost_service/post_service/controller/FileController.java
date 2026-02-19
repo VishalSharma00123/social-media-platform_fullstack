@@ -9,13 +9,17 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 public class FileController {
 
+    @Value("${upload.path:uploads}")
+    private String uploadPath;
+
     @GetMapping("/uploads/{type}/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String type, @PathVariable String filename) {
-        Path file = Path.of("uploads", type, filename);
+        Path file = Path.of(uploadPath, type, filename);
         Resource resource = new org.springframework.core.io.FileSystemResource(file.toFile());
         if (!resource.exists()) {
             return ResponseEntity.notFound().build();

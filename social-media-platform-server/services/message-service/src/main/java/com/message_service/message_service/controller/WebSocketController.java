@@ -1,7 +1,6 @@
 package com.message_service.message_service.controller;
 
 import com.message_service.message_service.dto.MessageRequest;
-import com.message_service.message_service.dto.MessageResponse;
 import com.message_service.message_service.dto.WebSocketMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,33 +34,15 @@ public class WebSocketController {
                         }
 
                         String userId = userIdObj.toString();
-                        log.info("📤 Sending message from userId: {} to receiverId: {}", userId,
+                        log.info("📤 WebSocket: Sending message from userId: {} to receiverId: {}", userId,
                                         messageRequest.getReceiverId());
 
-                        // Save message to database
-                        MessageResponse response = messageService.sendMessage(userId, messageRequest);
+                        // Save message to database AND send WebSocket notifications
+                        // MessageService.sendMessage() already handles sending to both
+                        // receiver and sender via /topic/chat/{userId}
+                        messageService.sendMessage(userId, messageRequest);
 
-                        // Create WebSocket message wrapper
-                        WebSocketMessage wsMessage = WebSocketMessage.builder()
-                                        .type("MESSAGE")
-                                        .message(response)
-                                        .conversationId(response.getConversationId())
-                                        .timestamp(System.currentTimeMillis())
-                                        .build();
-
-                        // Send to receiver
-                        messagingTemplate.convertAndSendToUser(
-                                        messageRequest.getReceiverId(),
-                                        "/queue/messages",
-                                        wsMessage);
-
-                        log.info("✅ Message sent successfully to user: {}", messageRequest.getReceiverId());
-
-                        // Also send confirmation back to sender
-                        messagingTemplate.convertAndSendToUser(
-                                        userId,
-                                        "/queue/messages",
-                                        wsMessage);
+                        log.info("✅ WebSocket: Message processed successfully");
 
                 } catch (Exception e) {
                         log.error("❌ Error sending message: {}", e.getMessage(), e);
@@ -84,22 +65,20 @@ public class WebSocketController {
 
                         String senderId = userIdObj.toString();
 
-                        // Set the sender's userId
+                        // The receiverId comes from the message payload
+                        String receiverId = message.getUserId();
+
+                        // Set the sender's info
                         message.setUserId(senderId);
                         message.setTimestamp(System.currentTimeMillis());
 
-                        // Get the receiver from the message (the person who should see the typing
-                        // indicator)
-                        String receiverId = message.getUserId(); // This should be the target user
+                        log.info("⌨️ Typing indicator from {} to {} - isTyping: {}", senderId, receiverId,
+                                        message.isTyping());
 
-                        log.info("⌨️ Typing indicator from {} - isTyping: {}", senderId, message.isTyping());
-
-                        // Send typing indicator to the RECEIVER (not the sender!)
-                        // The receiver should be extracted from the message payload
+                        // Send typing indicator to the receiver via topic
                         if (receiverId != null && !receiverId.equals(senderId)) {
-                                messagingTemplate.convertAndSendToUser(
-                                                receiverId,
-                                                "/queue/typing",
+                                messagingTemplate.convertAndSend(
+                                                "/topic/typing/" + receiverId,
                                                 message);
                         }
 

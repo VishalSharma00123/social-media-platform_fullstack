@@ -34,6 +34,6 @@ public class Message {
     private LocalDateTime readAt;
 
     public enum MessageType {
-        TEXT, IMAGE, VIDEO, FILE
+        TEXT, IMAGE, VIDEO, FILE, GIF
     }
 }

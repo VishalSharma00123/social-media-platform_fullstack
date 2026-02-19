@@ -1,5 +1,6 @@
 package com.notification_service.notification_service.event;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.notification_service.notification_service.dto.LoginNotificationRequest;
 import com.notification_service.notification_service.dto.NotificationRequest;
 import com.notification_service.notification_service.dto.RegistrationNotificationRequest;
@@ -17,43 +18,56 @@ import java.util.Map;
 public class NotificationEventListener {
 
     private final NotificationService notificationService;
+    private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "user-events", groupId = "notification-service-v3")
-    public void handleUserEvent(UserEvent event) {
-        log.info("Received user event: {}", event);
-
-        switch (event.getType()) {
-            case "FOLLOW":
-                createFollowNotification(event);
-                break;
-            case "LOGIN":
-                createLoginNotification(event);
-                break;
-            case "REGISTRATION":
-                createRegistrationNotification(event);
+    @KafkaListener(topics = "user-events", groupId = "notification-service-v4")
+    public void handleUserEvent(String message) {
+        log.info("Received user event JSON: {}", message);
+        try {
+            UserEvent event = objectMapper.readValue(message, UserEvent.class);
+            switch (event.getType()) {
+                case "FOLLOW":
+                    createFollowNotification(event);
+                    break;
+                case "LOGIN":
+                    createLoginNotification(event);
+                    break;
+                case "REGISTRATION":
+                    createRegistrationNotification(event);
+            }
+        } catch (Exception e) {
+            log.error("Error parsing user event: {}", e.getMessage());
         }
     }
 
-    @KafkaListener(topics = "post-events", groupId = "notification-service-v3")
-    public void handlePostEvent(PostEvent event) {
-        log.info("Received post event: {}", event);
-
-        switch (event.getType()) {
-            case "POST_LIKED":
-                createLikeNotification(event);
-                break;
-            case "COMMENT":
-                createCommentNotification(event);
-                break;
+    @KafkaListener(topics = "post-events", groupId = "notification-service-v4")
+    public void handlePostEvent(String message) {
+        log.info("Received post event JSON: {}", message);
+        try {
+            PostEvent event = objectMapper.readValue(message, PostEvent.class);
+            switch (event.getType()) {
+                case "POST_LIKED":
+                    createLikeNotification(event);
+                    break;
+                case "COMMENT":
+                    createCommentNotification(event);
+                    break;
+            }
+        } catch (Exception e) {
+            log.error("Error parsing post event: {}", e.getMessage());
         }
     }
 
-    @KafkaListener(topics = "message-events", groupId = "notification-service-v3")
-    public void handleMessageEvent(MessageEvent event) {
-        log.info("Received message event: {}", event);
-
-        if ("NEW_MESSAGE".equals(event.getType())) {
-            createMessageNotification(event);
+    @KafkaListener(topics = "message-events", groupId = "notification-service-v4")
+    public void handleMessageEvent(String message) {
+        log.info("Received message event JSON: {}", message);
+        try {
+            MessageEvent event = objectMapper.readValue(message, MessageEvent.class);
+            if ("NEW_MESSAGE".equals(event.getType())) {
+                createMessageNotification(event);
+            }
+        } catch (Exception e) {
+            log.error("Error parsing message event: {}", e.getMessage());
         }
     }
 
@@ -70,7 +84,7 @@ public class NotificationEventListener {
         notificationService.createNotification(request);
     }
 
-    private void createRegistrationNotification(UserEvent event){
+    private void createRegistrationNotification(UserEvent event) {
         RegistrationNotificationRequest request = RegistrationNotificationRequest.builder()
                 .userId(event.getUserId())
                 .type("REGISTRATION")
@@ -81,17 +95,18 @@ public class NotificationEventListener {
         notificationService.createRegistrationNotification(request);
     }
 
-    private void createLoginNotification(UserEvent user){
+    private void createLoginNotification(UserEvent user) {
         LoginNotificationRequest request = LoginNotificationRequest.builder()
                 .userId(user.getUserId())
                 .type("LOGIN")
                 .title("New Login")
-                .message(user.getUsername()+" has logined ")
+                .message(user.getUsername() + " has logined ")
                 .build();
 
         notificationService.createLoginNotification(request);
 
     }
+
     private void createLikeNotification(PostEvent event) {
         NotificationRequest request = NotificationRequest.builder()
                 .userId(event.getPostOwnerId())
@@ -132,6 +147,3 @@ public class NotificationEventListener {
         notificationService.createNotification(request);
     }
 }
-
-
-

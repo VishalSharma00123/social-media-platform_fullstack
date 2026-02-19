@@ -6,7 +6,6 @@ import api from "@/lib/api";
 import { User, Post, PageResponse, Conversation } from "@/lib/types";
 import PostCard from "@/components/PostCard";
 import { auth } from "@/lib/auth";
-import Link from "next/link";
 
 export default function ProfilePage() {
     const { username } = useParams<{ username: string }>();
@@ -42,7 +41,14 @@ export default function ProfilePage() {
     const getMediaUrl = (path: string) => {
         if (!path) return "";
         if (path.startsWith("http")) return path;
-        return `http://localhost:8081${path}`; // User Service URL
+
+        // Profile pictures are served by User Service (8081)
+        if (path.includes("profile-pictures")) {
+            return `http://localhost:8081${path}`;
+        }
+
+        // Post images/videos are served by Post Service (8082)
+        return `http://localhost:8082${path}`;
     };
 
     useEffect(() => {
@@ -173,27 +179,29 @@ export default function ProfilePage() {
     };
 
     if (loading) {
-        return <div className="text-center py-8">Loading profile...</div>;
+        return <div className="text-center py-20"><div className="w-10 h-10 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto"></div></div>;
     }
 
     if (!profile) {
-        return <div className="text-center py-8">Profile not found</div>;
+        return <div className="text-center py-20 text-surface-500">Profile not found</div>;
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto space-y-8 animate-in pb-20">
             {/* Profile Header Card */}
-            <div className="card shadow-md bg-white border-surface-200 overflow-hidden">
+            <div className="rounded-3xl shadow-2xl bg-surface-100 border border-surface-200 overflow-hidden relative">
                 {/* Cover Photo Placeholder */}
-                <div className="h-48 bg-gradient-to-r from-primary-400 to-blue-500 relative" />
+                <div className="h-48 bg-gradient-to-r from-primary-600 to-primary-900 relative">
+                    <div className="absolute inset-0 bg-black/10"></div>
+                </div>
 
                 <div className="px-8 pb-8">
                     <div className="relative flex justify-between items-end -mt-16 mb-6">
                         <div className="relative group">
-                            <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-surface-100 flex items-center justify-center text-3xl font-bold text-surface-400 overflow-hidden">
+                            <div className="w-32 h-32 rounded-full border-4 border-surface-100 shadow-2xl bg-surface-200 flex items-center justify-center text-3xl font-bold text-surface-400 overflow-hidden">
                                 {profile.profilePicture ? (
                                     <img
-                                        src={profile.profilePicture}
+                                        src={getMediaUrl(profile.profilePicture)}
                                         alt={profile.username}
                                         className="w-full h-full object-cover"
                                     />
@@ -202,7 +210,7 @@ export default function ProfilePage() {
                                 )}
                             </div>
                             {isOwnProfile && (
-                                <label className="absolute bottom-1 right-1 bg-primary-600 text-white p-2 rounded-full cursor-pointer hover:bg-primary-700 shadow-md transition-all scale-90 group-hover:scale-100">
+                                <label className="absolute bottom-1 right-1 bg-primary-600 text-white p-2.5 rounded-full cursor-pointer hover:bg-primary-500 shadow-lg shadow-black/30 transition-all scale-90 group-hover:scale-110 hover:rotate-12">
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -215,18 +223,18 @@ export default function ProfilePage() {
                         </div>
 
                         {!isOwnProfile && (
-                            <div className="flex space-x-3">
+                            <div className="flex space-x-3 mb-2">
                                 <button
                                     onClick={handleMessageClick}
-                                    className="px-6 py-2.5 bg-white border-2 border-primary-600 text-primary-600 rounded-full font-bold hover:bg-primary-50 transition-all"
+                                    className="px-6 py-2.5 bg-surface-200 border border-surface-300 text-white rounded-xl font-bold hover:bg-surface-300 hover:border-primary-500/30 transition-all shadow-sm"
                                 >
                                     Message
                                 </button>
                                 <button
                                     onClick={profile.isFollowing ? handleUnfollow : handleFollow}
-                                    className={`px-8 py-2.5 rounded-full font-bold transition-all shadow-sm ${profile.isFollowing
-                                        ? "bg-surface-100 text-surface-700 hover:bg-surface-200"
-                                        : "bg-primary-600 text-white hover:bg-primary-700 hover:shadow-md"
+                                    className={`px-8 py-2.5 rounded-xl font-bold transition-all shadow-lg ${profile.isFollowing
+                                        ? "bg-surface-200 text-surface-400 hover:bg-surface-300 hover:text-white"
+                                        : "bg-primary-600 text-white hover:bg-primary-500 shadow-primary-500/30"
                                         }`}
                                 >
                                     {profile.isFollowing ? "Unfollow" : "Follow"}
@@ -237,7 +245,7 @@ export default function ProfilePage() {
                         {isOwnProfile && (
                             <button
                                 onClick={openEditModal}
-                                className="px-6 py-2 border-2 border-surface-200 text-surface-700 rounded-full font-bold hover:bg-surface-50 transition-all"
+                                className="px-6 py-2.5 border border-surface-300 text-surface-300 rounded-xl font-bold hover:bg-surface-200 hover:text-white hover:border-surface-400 transition-all mb-2"
                             >
                                 Edit Profile
                             </button>
@@ -246,62 +254,62 @@ export default function ProfilePage() {
 
 
                     <div className="space-y-1">
-                        <h1 className="text-3xl font-black text-surface-900">
+                        <h1 className="text-3xl font-black text-white tracking-tight">
                             {profile.fullName || profile.username}
                         </h1>
-                        <p className="text-surface-500 font-medium tracking-tight">@{profile.username}</p>
+                        <p className="text-primary-500 font-bold tracking-wide">@{profile.username}</p>
                     </div>
 
                     {profile.bio && (
-                        <p className="mt-4 text-surface-700 leading-relaxed max-w-2xl">
+                        <p className="mt-4 text-surface-300 leading-relaxed max-w-2xl font-medium">
                             {profile.bio}
                         </p>
                     )}
 
-                    <div className="flex space-x-8 mt-6 pt-6 border-t border-surface-50">
+                    <div className="flex space-x-8 mt-8 pt-6 border-t border-surface-200/50">
                         <div
-                            className="flex items-center space-x-2 cursor-pointer hover:bg-surface-50 px-3 py-1.5 rounded-xl transition-all"
+                            className="flex items-center space-x-2 cursor-pointer hover:bg-surface-200/50 px-3 py-2 -ml-3 rounded-xl transition-all group"
                             onClick={() => fetchUserList('followers')}
                         >
-                            <span className="text-xl font-black text-surface-900">{profile.followersCount}</span>
-                            <span className="text-sm font-semibold text-surface-500 uppercase tracking-widest">Followers</span>
+                            <span className="text-xl font-black text-white group-hover:text-primary-400 transition-colors">{profile.followersCount}</span>
+                            <span className="text-xs font-bold text-surface-500 uppercase tracking-widest mt-0.5">Followers</span>
                         </div>
                         <div
-                            className="flex items-center space-x-2 cursor-pointer hover:bg-surface-50 px-3 py-1.5 rounded-xl transition-all"
+                            className="flex items-center space-x-2 cursor-pointer hover:bg-surface-200/50 px-3 py-2 rounded-xl transition-all group"
                             onClick={() => fetchUserList('following')}
                         >
-                            <span className="text-xl font-black text-surface-900">{profile.followingCount}</span>
-                            <span className="text-sm font-semibold text-surface-500 uppercase tracking-widest">Following</span>
+                            <span className="text-xl font-black text-white group-hover:text-primary-400 transition-colors">{profile.followingCount}</span>
+                            <span className="text-xs font-bold text-surface-500 uppercase tracking-widest mt-0.5">Following</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div className="space-y-6">
-                <div className="flex items-center space-x-4 border-b border-surface-100">
+                <div className="flex items-center space-x-4 border-b border-surface-200 sticky top-0 bg-surface-50/95 backdrop-blur-md z-10 pt-4 pb-0">
                     <button
                         onClick={() => setActiveTab('posts')}
-                        className={`px-4 py-3 border-b-2 text-sm uppercase tracking-widest font-black transition-all ${activeTab === 'posts'
-                            ? "border-primary-600 text-primary-600"
-                            : "border-transparent text-surface-400 hover:text-surface-600"
+                        className={`px-4 py-4 border-b-2 text-sm uppercase tracking-widest font-black transition-all ${activeTab === 'posts'
+                            ? "border-primary-500 text-primary-500"
+                            : "border-transparent text-surface-500 hover:text-white"
                             }`}
                     >
                         Posts
                     </button>
                     <button
                         onClick={() => setActiveTab('media')}
-                        className={`px-4 py-3 border-b-2 text-sm uppercase tracking-widest font-black transition-all ${activeTab === 'media'
-                            ? "border-primary-600 text-primary-600"
-                            : "border-transparent text-surface-400 hover:text-surface-600"
+                        className={`px-4 py-4 border-b-2 text-sm uppercase tracking-widest font-black transition-all ${activeTab === 'media'
+                            ? "border-primary-500 text-primary-500"
+                            : "border-transparent text-surface-500 hover:text-white"
                             }`}
                     >
                         Media
                     </button>
                     <button
                         onClick={() => setActiveTab('likes')}
-                        className={`px-4 py-3 border-b-2 text-sm uppercase tracking-widest font-black transition-all ${activeTab === 'likes'
-                            ? "border-primary-600 text-primary-600"
-                            : "border-transparent text-surface-400 hover:text-surface-600"
+                        className={`px-4 py-4 border-b-2 text-sm uppercase tracking-widest font-black transition-all ${activeTab === 'likes'
+                            ? "border-primary-500 text-primary-500"
+                            : "border-transparent text-surface-500 hover:text-white"
                             }`}
                     >
                         Likes
@@ -311,8 +319,8 @@ export default function ProfilePage() {
                 <div className="space-y-4">
                     {postsLoading ? (
                         <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                            <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-                            <p className="text-xs font-black text-surface-400 tracking-[0.2em] uppercase">Loading {activeTab}...</p>
+                            <div className="w-10 h-10 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
+                            <p className="text-xs font-black text-surface-500 tracking-[0.2em] uppercase">Loading {activeTab}...</p>
                         </div>
                     ) : posts.length > 0 ? (
                         posts.map((post) => (
@@ -335,14 +343,14 @@ export default function ProfilePage() {
                             />
                         ))
                     ) : (
-                        <div className="text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-surface-100">
-                            <span className="text-5xl block mb-4">
+                        <div className="text-center py-20 bg-surface-100 rounded-[2rem] border border-dashed border-surface-200">
+                            <span className="text-5xl block mb-4 grayscale opacity-40">
                                 {activeTab === 'posts' ? '📭' : activeTab === 'media' ? '🖼️' : '❤️'}
                             </span>
-                            <p className="text-surface-500 font-bold text-lg">
+                            <p className="text-surface-400 font-bold text-lg">
                                 {activeTab === 'posts' ? 'No posts yet' : activeTab === 'media' ? 'No media found' : 'No liked posts yet'}
                             </p>
-                            <p className="text-surface-400 text-sm mt-1 font-medium italic">
+                            <p className="text-surface-500 text-sm mt-1 font-medium italic">
                                 {isOwnProfile ? "Time to share something with the world!" : `@${username} hasn't shared anything here.`}
                             </p>
                         </div>
@@ -356,16 +364,16 @@ export default function ProfilePage() {
                     className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in"
                     onClick={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
                 >
-                    <div className="absolute inset-0 bg-surface-900/40 backdrop-blur-sm" />
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
                     <div
-                        className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95"
+                        className="relative bg-surface-100 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 border border-surface-200"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="px-6 py-4 border-b border-surface-100 flex items-center justify-between bg-white sticky top-0">
-                            <h3 className="text-lg font-black text-surface-900 tracking-tight">{modalConfig.title}</h3>
+                        <div className="px-6 py-4 border-b border-surface-200 flex items-center justify-between bg-surface-100 sticky top-0">
+                            <h3 className="text-lg font-black text-white tracking-tight">{modalConfig.title}</h3>
                             <button
                                 onClick={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
-                                className="p-2 hover:bg-surface-100 rounded-full transition-colors text-surface-400 hover:text-surface-600"
+                                className="p-2 hover:bg-surface-200 rounded-full transition-colors text-surface-400 hover:text-white"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -373,11 +381,11 @@ export default function ProfilePage() {
                             </button>
                         </div>
 
-                        <div className="max-h-[60vh] overflow-y-auto px-2 py-2 bg-surface-50/30">
+                        <div className="max-h-[60vh] overflow-y-auto px-2 py-2 bg-surface-100 scrollbar-thin scrollbar-thumb-surface-300">
                             {modalConfig.loading ? (
                                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                                    <div className="w-8 h-8 border-3 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-                                    <p className="text-xs font-bold text-surface-400 tracking-widest uppercase">Loading...</p>
+                                    <div className="w-8 h-8 border-3 border-transparent border-t-primary-500 rounded-full animate-spin" />
+                                    <p className="text-xs font-bold text-surface-500 tracking-widest uppercase">Loading...</p>
                                 </div>
                             ) : modalConfig.users.length > 0 ? (
                                 <div className="space-y-1">
@@ -388,10 +396,10 @@ export default function ProfilePage() {
                                                 setModalConfig(prev => ({ ...prev, isOpen: false }));
                                                 router.push(`/profile/${user.username}`);
                                             }}
-                                            className="flex items-center justify-between p-3 rounded-2xl hover:bg-white hover:shadow-md transition-all cursor-pointer group"
+                                            className="flex items-center justify-between p-3 rounded-2xl hover:bg-surface-200 hover:shadow-md transition-all cursor-pointer group"
                                         >
                                             <div className="flex items-center space-x-4">
-                                                <div className="w-12 h-12 rounded-full bg-primary-100 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-primary-600 font-bold">
+                                                <div className="w-12 h-12 rounded-full bg-surface-200 border-2 border-surface-300 shadow-sm overflow-hidden flex items-center justify-center text-primary-500 font-bold group-hover:border-primary-500/30 transition-colors">
                                                     {user.profilePicture ? (
                                                         <img
                                                             src={getMediaUrl(user.profilePicture)}
@@ -402,20 +410,20 @@ export default function ProfilePage() {
                                                         user.username.charAt(0).toUpperCase()
                                                     )}
                                                 </div>
-                                                <div className="space-y-0.5">
-                                                    <p className="font-bold text-surface-900 group-hover:text-primary-600 transition-colors">
+                                                <div className="space-y-0.5 min-w-0">
+                                                    <p className="font-bold text-white group-hover:text-primary-400 transition-colors truncate">
                                                         {user.fullName || user.username}
                                                     </p>
-                                                    <p className="text-xs text-surface-500 font-medium tracking-tight">@{user.username}</p>
+                                                    <p className="text-xs text-surface-500 font-medium tracking-tight truncate">@{user.username}</p>
                                                 </div>
                                             </div>
-                                            <span className="text-surface-300 group-hover:text-primary-400 transition-colors mr-2">›</span>
+                                            <span className="text-surface-500 group-hover:text-primary-500 transition-colors mr-2">›</span>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="text-center py-12 space-y-2">
-                                    <span className="text-4xl block mb-2">👤</span>
+                                    <span className="text-4xl block mb-2 grayscale opacity-30">👤</span>
                                     <p className="text-surface-500 font-bold">No {modalConfig.title.toLowerCase()} yet</p>
                                 </div>
                             )}
@@ -430,21 +438,21 @@ export default function ProfilePage() {
                     className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-in fade-in"
                     onClick={() => setIsEditing(false)}
                 >
-                    <div className="absolute inset-0 bg-surface-900/60 backdrop-blur-md" />
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
                     <div
-                        className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95"
+                        className="relative bg-surface-100 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 border border-surface-200"
                         onClick={e => e.stopPropagation()}
                     >
                         <form onSubmit={handleUpdateProfile} className="flex flex-col h-full">
-                            <div className="px-8 py-6 border-b border-surface-100 flex items-center justify-between bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                            <div className="px-8 py-6 border-b border-surface-200 flex items-center justify-between bg-surface-100/80 backdrop-blur-sm sticky top-0 z-10">
                                 <div>
-                                    <h3 className="text-2xl font-black text-surface-900 tracking-tight">Edit Profile</h3>
+                                    <h3 className="text-2xl font-black text-white tracking-tight">Edit Profile</h3>
                                     <p className="text-sm font-medium text-surface-400">Update your public information</p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setIsEditing(false)}
-                                    className="p-2.5 hover:bg-surface-100 rounded-full transition-all text-surface-400 hover:text-surface-900 hover:rotate-90 duration-300"
+                                    className="p-2.5 hover:bg-surface-200 rounded-full transition-all text-surface-400 hover:text-white hover:rotate-90 duration-300"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -452,26 +460,26 @@ export default function ProfilePage() {
                                 </button>
                             </div>
 
-                            <div className="p-8 space-y-8 bg-surface-50/30">
+                            <div className="p-8 space-y-8 bg-surface-100">
                                 <div className="space-y-3">
-                                    <label className="text-xs font-black text-surface-400 uppercase tracking-[0.2em] ml-1">Full Name</label>
+                                    <label className="text-xs font-black text-surface-500 uppercase tracking-[0.2em] ml-1">Full Name</label>
                                     <input
                                         autoFocus
                                         type="text"
                                         value={editForm.fullName}
                                         onChange={e => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
-                                        className="w-full bg-white border-2 border-surface-100 rounded-2xl px-6 py-4 text-surface-900 font-bold placeholder-surface-300 focus:border-primary-500 focus:ring-0 transition-all shadow-sm focus:shadow-md"
+                                        className="w-full bg-surface-200 border border-surface-300 rounded-2xl px-6 py-4 text-white font-bold placeholder-surface-500 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 transition-all shadow-sm focus:shadow-lg"
                                         placeholder="Add your full name..."
                                     />
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-xs font-black text-surface-400 uppercase tracking-[0.2em] ml-1">Bio</label>
+                                    <label className="text-xs font-black text-surface-500 uppercase tracking-[0.2em] ml-1">Bio</label>
                                     <textarea
                                         value={editForm.bio}
                                         onChange={e => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
                                         rows={4}
-                                        className="w-full bg-white border-2 border-surface-100 rounded-2xl px-6 py-4 text-surface-900 font-medium placeholder-surface-300 focus:border-primary-500 focus:ring-0 transition-all shadow-sm focus:shadow-md resize-none"
+                                        className="w-full bg-surface-200 border border-surface-300 rounded-2xl px-6 py-4 text-white font-medium placeholder-surface-500 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 transition-all shadow-sm focus:shadow-lg resize-none"
                                         placeholder="Tell us a bit about yourself..."
                                     />
                                     <p className="text-[10px] text-surface-400 font-bold text-right mr-1 tracking-wider uppercase">
@@ -480,18 +488,18 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            <div className="px-8 py-6 bg-white border-t border-surface-100 flex items-center justify-end space-x-4">
+                            <div className="px-8 py-6 bg-surface-100 border-t border-surface-200 flex items-center justify-end space-x-4">
                                 <button
                                     type="button"
                                     onClick={() => setIsEditing(false)}
-                                    className="px-8 py-3.5 text-sm font-black text-surface-600 hover:text-surface-900 hover:bg-surface-50 rounded-2xl transition-all tracking-wider uppercase"
+                                    className="px-8 py-3.5 text-sm font-black text-surface-400 hover:text-white hover:bg-surface-200 rounded-2xl transition-all tracking-wider uppercase"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={updating}
-                                    className="px-10 py-3.5 bg-primary-600 text-white rounded-2xl font-black text-sm hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-600/20 active:scale-95 disabled:bg-surface-200 transition-all tracking-wider uppercase flex items-center space-x-2"
+                                    className="px-10 py-3.5 bg-primary-600 text-white rounded-2xl font-black text-sm hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-600/20 active:scale-95 disabled:bg-surface-200 transition-all tracking-wider uppercase flex items-center space-x-2"
                                 >
                                     {updating ? (
                                         <>
@@ -510,4 +518,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-

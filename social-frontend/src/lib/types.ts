@@ -77,7 +77,7 @@ export interface Message {
     senderId: string;
     receiverId: string;
     content: string;
-    type: "TEXT" | "IMAGE" | "VIDEO" | "FILE";
+    type: "TEXT" | "IMAGE" | "VIDEO" | "FILE" | "GIF";
     mediaUrl?: string;
     read: boolean;
     deleted: boolean;

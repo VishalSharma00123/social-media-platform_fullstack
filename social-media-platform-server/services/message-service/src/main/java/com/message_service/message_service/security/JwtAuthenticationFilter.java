@@ -54,14 +54,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String userId = validateTokenAndGetUserId(jwt);
 
                 if (userId != null) {
-                    log.debug("✓ Token validated, UserId: {}", userId);
+                    log.info("✓ Token validated, UserId: {}", userId);
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userId,
-                                    null,
-                                    new ArrayList<>()
-                            );
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userId,
+                            null,
+                            new ArrayList<>());
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     log.debug("✓ Authentication set in SecurityContext");

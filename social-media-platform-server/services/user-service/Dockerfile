@@ -29,7 +29,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Create folders
-RUN mkdir -p /app/uploads /app/logs
+RUN mkdir -p /app/uploads/images /app/uploads/videos /app/logs
 
 # Copy JAR from build stage
 COPY --from=build /app/target/*.jar app.jar

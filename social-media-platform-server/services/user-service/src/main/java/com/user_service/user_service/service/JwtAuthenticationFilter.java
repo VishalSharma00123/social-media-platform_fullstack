@@ -32,10 +32,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        boolean shouldSkip = path.startsWith("/api/users/internal") ||  // Removed trailing slash
+        boolean shouldSkip = path.startsWith("/api/users/internal") || // Removed trailing slash
                 path.startsWith("/api/users/register") ||
                 path.startsWith("/api/users/login") ||
                 path.startsWith("/api/users/test") ||
+                path.startsWith("/files") ||
                 path.startsWith("/actuator");
 
         if (shouldSkip) {
@@ -66,12 +67,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (userId != null) {
                     log.debug("✅ JWT valid for userId: {}", userId);
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userId,
-                                    null,
-                                    new ArrayList<>()
-                            );
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userId,
+                            null,
+                            new ArrayList<>());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 

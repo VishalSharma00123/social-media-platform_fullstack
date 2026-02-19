@@ -2,8 +2,10 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
 const api = axios.create({
-    baseURL: "http://localhost:8080",
+    baseURL: API_URL,
     timeout: 60000, // 60 seconds for file uploads
     // ❌ REMOVE this - it breaks multipart/form-data
     // headers: {

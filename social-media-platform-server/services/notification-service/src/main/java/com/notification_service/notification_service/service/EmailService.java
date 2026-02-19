@@ -24,15 +24,24 @@ public class EmailService {
 
     @Async
     public void sendNotificationEmail(Notification notification, String toEmail) {
+        // NOTE: The caller (NotificationService) is responsible for fetching the
+        // CORRECT user email
+        // independently using UserServiceClient for each notification recipient.
+        // We do not change the signature here to keep it simple, but the caller must
+        // ensure 'toEmail' is dynamic.
+
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
+            // This 'toEmail' must be the specific user's email passed from the service
+            // layer
+
             message.setSubject(notification.getTitle() + " - " + appName);
             message.setText(buildEmailBody(notification));
             mailSender.send(message);
             log.info("Email sent to {} for notification {}", toEmail, notification.getId());
-        } catch  (Exception e) {
+        } catch (Exception e) {
             log.error("Failed to send email for notification {}: {}", notification.getId(), e.getMessage());
         }
     }

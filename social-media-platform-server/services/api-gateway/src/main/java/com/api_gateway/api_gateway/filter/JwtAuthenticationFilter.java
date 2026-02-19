@@ -27,10 +27,10 @@ public class JwtAuthenticationFilter implements WebFilter {
             "/api/users/register",
             "/api/users/login",
             "/api/admin/auth/login",
+            "/api/messages/media", // Media files (loaded by <img>/<video> tags without auth)
             "/health",
             "/actuator",
-            "/fallback"
-    );
+            "/fallback");
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -41,6 +41,11 @@ public class JwtAuthenticationFilter implements WebFilter {
         // Skip JWT validation for public endpoints
         if (isPublicPath(path)) {
             log.debug("⏭️  Public path, skipping JWT validation: {}", path);
+            return chain.filter(exchange);
+        }
+
+        // Allow CORS preflight requests
+        if (exchange.getRequest().getMethod().matches("OPTIONS")) {
             return chain.filter(exchange);
         }
 
@@ -68,7 +73,8 @@ public class JwtAuthenticationFilter implements WebFilter {
             // Extract user information
             String userId = jwtUtil.getUserId(token);
             String username = jwtUtil.getUsername(token);
-
+            // presenting on angular js, react AWS, microsoft azure and google cloud
+            // service, and manual script
             log.debug("✅ JWT valid for user: {} ({})", username, userId);
 
             // Add user info to headers for downstream services
@@ -83,8 +89,8 @@ public class JwtAuthenticationFilter implements WebFilter {
                     .build();
 
             // Create authentication object
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, List.of());
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null,
+                    List.of());
 
             // Continue with authentication context and modified exchange
             return chain.filter(modifiedExchange)

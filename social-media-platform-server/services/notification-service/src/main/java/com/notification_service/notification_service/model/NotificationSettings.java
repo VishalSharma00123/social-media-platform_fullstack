@@ -22,7 +22,7 @@ public class NotificationSettings {
     private boolean emailOnMention = true;
     private boolean emailOnMessage = true;
     private boolean emailOnLogin = true;
-    private boolean emailOnRegitration = true;
+    private boolean emailOnRegistration = true;
 
     // Push notifications
     private boolean pushOnFollow = true;
@@ -39,12 +39,11 @@ public class NotificationSettings {
     private boolean inAppOnLike = true;
     private boolean inAppOnMention = true;
     private boolean inAppOnMessage = true;
-    private boolean isAppOnLogin = true;
-    private boolean isAppOnRegistration = true;
+    private boolean inAppOnLogin = true;
+    private boolean inAppOnRegistration = true;
 
     private String fcmToken; // Firebase Cloud Messaging token
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
-

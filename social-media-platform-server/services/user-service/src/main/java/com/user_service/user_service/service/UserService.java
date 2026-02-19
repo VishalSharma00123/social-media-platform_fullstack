@@ -171,9 +171,8 @@ public class UserService {
             event.setType(type);
             event.setUserId(userId);
             event.setUsername(username);
-            if (targetUserId != null) {
-                event.setTargetUserId(targetUserId);
-            }
+            // Default targetUserId to userId if it's null (for REGISTRATION/LOGIN)
+            event.setTargetUserId(targetUserId != null ? targetUserId : userId);
 
             kafkaTemplate.send(EVENT_TOPIC, event)
                     .whenComplete((result, ex) -> {
