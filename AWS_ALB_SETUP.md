@@ -1,6 +1,8 @@
 # AWS Deployment Guide with Application Load Balancer (ALB)
 
-This guide details how to deploy your full-stack social media application using an AWS Application Load Balancer (ALB) instead of Nginx. This architecture provides better scalability, SSL management, and AWS integration.
+This guide details how to deploy your full-stack social media application using an AWS Application Load Balancer (ALB) instead of accessing ports directly. This architecture provides better routing, SSL management, and AWS integration.
+
+> **Note**: This setup uses a `t3.small` instance (2 vCPU, 2GB RAM) optimized for testing/practice with ~20 users.
 
 ## Architecture Overview
 - **User** -> **AWS ALB (Port 80/443)** -> **Target Groups** -> **EC2 Instance (Docker Compose)**
@@ -12,20 +14,25 @@ This guide details how to deploy your full-stack social media application using 
 ---
 
 ## Step 1 to 3: Launch Instance & Deploy Code
-Follow Steps 1, 2, and 3 from the original `AWS_DEPLOYMENT.md` to:
-1.  Launch an EC2 instance (Ubuntu 24.04, t3.xlarge).
-2.  Install Docker and Docker Compose.
-3.  Deploy your code (Clone repo or copy files).
+Follow Steps 1, 2, and 3 from `AWS_DEPLOYMENT.md` to:
+1.  Launch an EC2 instance (Ubuntu 24.04, **t3.small**).
+2.  **Add 4GB swap space** (mandatory for t3.small).
+3.  Install Docker and Docker Compose.
+4.  Deploy your code (Clone repo or copy files).
 
-**Crucial Change**: When running the application, use the updated `docker-compose.yml` which exposes:
-- **Frontend** on Port `3000`
-- **API Gateway** on Port `8080`
-(Nginx has been removed).
+**Important**: Use the staged startup approach from `AWS_DEPLOYMENT.md` Step 4 to avoid OOM during builds on t3.small.
 
 To run the app:
 ```bash
 cd ~/social-media-app/social-media-platform-server
-docker compose up -d --build
+
+# Start infrastructure first
+docker compose up -d mongodb redis zookeeper kafka
+# Wait ~30s, then start services
+docker compose up -d eureka-server
+# Wait ~40s for Eureka to be healthy
+docker compose up -d api-gateway user-service post-service message-service notification-service admin-service
+docker compose up -d social-frontend
 ```
 Ensure all services are healthy (`docker compose ps`).
 
@@ -125,6 +132,40 @@ You need two target groups: one for the Frontend and one for the Backend.
 - **502 Bad Gateway**:
   - Check Target Groups health status. If "Unhealthy", check if EC2 ports 3000/8080 are open in Security Group.
   - Check if services are running: `docker compose ps`.
+  - On t3.small, services may take longer to start. Wait 2-3 minutes after `docker compose up`.
 - **404 on API calls**:
   - Verify the path pattern rule `/api/*`.
   - Check logs for Gateway: `docker compose logs -f api-gateway`.
+- **Services crashing (Exit Code 137)**:
+  - This is OOM. Verify swap is active: `free -h`.
+  - Restart crashed services: `docker compose up -d`.
+
+## Cost Estimate (t3.small)
+| Component | Monthly Cost |
+|-----------|-------------|
+| EC2 t3.small (on-demand) | ~$15/month |
+| ALB | ~$20/month |
+| EBS 30GB gp3 | ~$2.50/month |
+| Data transfer (light usage) | ~$1-5/month |
+| **Total** | **~$38-42/month** |
+
+> **Tip**: Use a **Spot Instance** for the EC2 to save ~70% ($4.50/month instead of $15), but it may be interrupted. Fine for practice/testing.
+
+---
+
+## Quick Reference: Step Order (Follow This Exactly)
+
+| # | Step | From Which File | What It Does |
+|---|------|----------------|--------------|
+| 1 | Phase 1 (Steps 1.1–1.5) | `AWS_DEPLOYMENT.md` | Launch EC2 instance |
+| 2 | Phase 2 (Steps 2.1–2.4) | `AWS_DEPLOYMENT.md` | SSH into the server |
+| 3 | Phase 3 (Steps 3.1–3.2) | `AWS_DEPLOYMENT.md` | Swap space + Install Docker |
+| 4 | Phase 4 (Steps 4.1–4.3) | `AWS_DEPLOYMENT.md` | Clone your repo onto the server |
+| 5 | Phase 5 (Steps 5.1–5.6) | `AWS_DEPLOYMENT.md` | Build & start all Docker services |
+| 6 | Step 4 | `AWS_ALB_SETUP.md` | Security Group config for ALB |
+| 7 | Step 5 | `AWS_ALB_SETUP.md` | Create Target Groups |
+| 8 | Step 6 | `AWS_ALB_SETUP.md` | Create ALB |
+| 9 | Step 7 | `AWS_ALB_SETUP.md` | Configure ALB routing rules |
+| 10 | Step 8 | `AWS_ALB_SETUP.md` | Test everything |
+
+> **Note**: The app must be running (Step 5 done) before setting up ALB (Steps 6–10), because ALB needs healthy targets to route to.
