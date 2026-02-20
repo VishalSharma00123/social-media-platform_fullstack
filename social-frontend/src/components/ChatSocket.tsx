@@ -5,6 +5,7 @@ import { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { auth } from "@/lib/auth";
+import { config } from "@/lib/config";
 
 interface Props {
     onMessage: (message: any) => void;
@@ -90,8 +91,8 @@ const ChatSocket = forwardRef<ChatSocketHandle, Props>(
             const userId = auth.getUser()?.id;
             if (!userId) return;
 
-            // WebSocket connects directly to message-service (not through API Gateway)
-            const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:8083";
+            // WebSocket connects through API Gateway (which proxies /ws/** to message-service)
+            const WS_URL = config.wsUrl;
 
             // Create STOMP client
             // ✅ FIX: Create SockJS INSIDE webSocketFactory so each connection

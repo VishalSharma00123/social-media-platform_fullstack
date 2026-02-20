@@ -31,6 +31,8 @@ public class SecurityConfig {
                         .pathMatchers("/health", "/actuator/**", "/fallback").permitAll()
                         .pathMatchers("/ws/**").permitAll() // Allow WebSocket handshakes
                         .pathMatchers("/api/messages/media/**").permitAll() // Media files
+                        .pathMatchers("/files/**").permitAll() // Profile pictures
+                        .pathMatchers("/uploads/**").permitAll() // Post images/videos
                         .anyExchange().authenticated());
 
         return http.build();

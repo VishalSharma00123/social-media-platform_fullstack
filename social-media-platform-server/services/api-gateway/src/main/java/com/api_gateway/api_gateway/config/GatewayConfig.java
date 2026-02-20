@@ -39,6 +39,11 @@ public class GatewayConfig {
                                                 .path("/uploads/**")
                                                 .uri("lb://POST-SERVICE"))
 
+                                // User Service - File serving (profile pictures)
+                                .route("user-service-files", r -> r
+                                                .path("/files/**")
+                                                .uri("lb://USER-SERVICE"))
+
                                 // Message Service
                                 .route("message-service-messages", r -> r
                                                 .path("/api/messages/**")
