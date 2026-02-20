@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/auth";
 import ChatSocket from "@/components/ChatSocket";
+import { getMediaUrl } from "@/lib/config";
 
 export default function ConversationsPage() {
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -141,7 +142,7 @@ export default function ConversationsPage() {
                                         <div className="w-14 h-14 rounded-full bg-surface-200 flex items-center justify-center text-primary-500 font-bold text-xl overflow-hidden border-2 border-surface-300 shadow-sm transition-transform group-hover:scale-105">
                                             {conv.otherUserProfilePicture ? (
                                                 <img
-                                                    src={conv.otherUserProfilePicture.startsWith('http') ? conv.otherUserProfilePicture : `http://localhost:8082${conv.otherUserProfilePicture}`}
+                                                    src={getMediaUrl(conv.otherUserProfilePicture)}
                                                     alt={conv.otherUserName}
                                                     className="w-full h-full object-cover"
                                                 />
@@ -256,7 +257,7 @@ export default function ConversationsPage() {
                                             <div className="w-12 h-12 rounded-full bg-surface-200 flex items-center justify-center text-primary-500 font-bold text-lg overflow-hidden border-2 border-surface-300 shadow-sm flex-shrink-0 transition-transform group-hover:scale-105">
                                                 {user.profilePicture ? (
                                                     <img
-                                                        src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:8082${user.profilePicture}`}
+                                                        src={getMediaUrl(user.profilePicture)}
                                                         alt={user.username}
                                                         className="w-full h-full object-cover"
                                                     />

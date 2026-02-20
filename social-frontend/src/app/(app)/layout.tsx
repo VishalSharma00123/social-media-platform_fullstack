@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import api from "@/lib/api";
+import { getMediaUrl } from "@/lib/config";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -13,15 +14,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const currentUser = auth.getUser();
 
-    const getMediaUrl = (path: string | undefined) => {
-        if (!path) return "";
-        if (path.startsWith("http")) return path;
-        // Profile pictures are served by User Service (8081)
-        if (path.includes("profile-pictures")) {
-            return `http://localhost:8081${path}`;
-        }
-        return `http://localhost:8081${path}`; // Default to user service for avatars
-    };
+
 
     // Auth guard - redirect to login if not authenticated
     useEffect(() => {

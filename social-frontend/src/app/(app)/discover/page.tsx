@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { User } from "@/lib/types";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { getMediaUrl } from "@/lib/config";
 
 export default function DiscoverPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -65,7 +66,7 @@ export default function DiscoverPage() {
             <Link href={`/profile/${user.username}`} className="flex items-center space-x-4 flex-grow group">
                 <div className="w-12 h-12 rounded-full bg-surface-200 flex items-center justify-center text-primary-500 font-bold overflow-hidden border-2 border-surface-300 shadow-sm relative group-hover:scale-105 transition-transform">
                     {user.profilePicture ? (
-                        <img src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:8082${user.profilePicture}`} alt={user.username} className="w-full h-full object-cover" />
+                        <img src={getMediaUrl(user.profilePicture)} alt={user.username} className="w-full h-full object-cover" />
                     ) : (
                         user.username.charAt(0).toUpperCase()
                     )}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { auth } from "@/lib/auth";
 import { Post } from "@/lib/types";
 import api from "@/lib/api";
+import { getMediaUrl } from "@/lib/config";
 
 interface Props {
     post: Post;
@@ -15,19 +16,7 @@ export default function PostCard({ post, onUpdate }: Props) {
     const [showComments, setShowComments] = useState(false);
     const currentUser = auth.getUser();
 
-    // ✅ ADD THIS: Build full URL for media
-    const getMediaUrl = (path: string) => {
-        if (!path) return "";
-        if (path.startsWith("http")) return path;
 
-        // Profile pictures are served by User Service (8081)
-        if (path.includes("profile-pictures")) {
-            return `http://localhost:8081${path}`;
-        }
-
-        // Post images/videos are served by Post Service (8082)
-        return `http://localhost:8082${path}`;
-    };
 
     const toggleLike = async () => {
         // Optimistic Update

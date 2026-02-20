@@ -6,6 +6,7 @@ import api from "@/lib/api";
 import { User, Post, PageResponse, Conversation } from "@/lib/types";
 import PostCard from "@/components/PostCard";
 import { auth } from "@/lib/auth";
+import { getMediaUrl } from "@/lib/config";
 
 export default function ProfilePage() {
     const { username } = useParams<{ username: string }>();
@@ -38,18 +39,7 @@ export default function ProfilePage() {
     });
     const [updating, setUpdating] = useState(false);
 
-    const getMediaUrl = (path: string) => {
-        if (!path) return "";
-        if (path.startsWith("http")) return path;
 
-        // Profile pictures are served by User Service (8081)
-        if (path.includes("profile-pictures")) {
-            return `http://localhost:8081${path}`;
-        }
-
-        // Post images/videos are served by Post Service (8082)
-        return `http://localhost:8082${path}`;
-    };
 
     useEffect(() => {
         loadProfile();

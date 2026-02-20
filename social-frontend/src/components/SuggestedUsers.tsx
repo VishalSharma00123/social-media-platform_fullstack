@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { User } from "@/lib/types";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { getMediaUrl } from "@/lib/config";
 
 export default function SuggestedUsers() {
     const [suggestions, setSuggestions] = useState<User[]>([]);
@@ -72,7 +73,7 @@ export default function SuggestedUsers() {
                             <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-surface-200 to-surface-100 flex items-center justify-center text-primary-600 font-bold overflow-hidden shadow-inner group-hover/user:scale-105 transition-transform duration-300">
                                 {user.profilePicture ? (
                                     <img
-                                        src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:8082${user.profilePicture}`}
+                                        src={getMediaUrl(user.profilePicture)}
                                         alt={user.username}
                                         className="w-full h-full object-cover"
                                     />

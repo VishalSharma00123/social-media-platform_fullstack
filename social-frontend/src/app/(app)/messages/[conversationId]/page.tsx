@@ -7,6 +7,7 @@ import { Message, PageResponse, Conversation } from "@/lib/types";
 import { auth } from "@/lib/auth";
 import ChatSocket from "@/components/ChatSocket";
 import EmojiGifPicker from "@/components/EmojiGifPicker";
+import { getMediaUrl, getMessageMediaUrl } from "@/lib/config";
 
 export default function ChatPage() {
     const { conversationId } = useParams<{ conversationId: string }>();
@@ -238,7 +239,7 @@ export default function ChatPage() {
                     <div className="w-10 h-10 rounded-full bg-surface-200 flex items-center justify-center text-primary-500 font-bold overflow-hidden border-2 border-surface-300 shadow-sm relative">
                         {conversation?.otherUserProfilePicture ? (
                             <img
-                                src={conversation.otherUserProfilePicture.startsWith('http') ? conversation.otherUserProfilePicture : `http://localhost:8082${conversation.otherUserProfilePicture}`}
+                                src={getMediaUrl(conversation.otherUserProfilePicture)}
                                 alt={conversation.otherUserName}
                                 className="w-full h-full object-cover"
                             />
@@ -305,13 +306,13 @@ export default function ChatPage() {
                                             <div className="mb-2 rounded-lg overflow-hidden border border-black/10">
                                                 {message.type === "VIDEO" ? (
                                                     <video
-                                                        src={message.mediaUrl.startsWith('http') ? message.mediaUrl : `http://localhost:8080${message.mediaUrl}`}
+                                                        src={getMessageMediaUrl(message.mediaUrl)}
                                                         controls
                                                         className="max-w-[240px] h-auto rounded-lg"
                                                     />
                                                 ) : (
                                                     <img
-                                                        src={message.mediaUrl.startsWith('http') ? message.mediaUrl : `http://localhost:8080${message.mediaUrl}`}
+                                                        src={getMessageMediaUrl(message.mediaUrl)}
                                                         alt="Attachment"
                                                         className="max-w-[240px] h-auto hover:grayscale-[0.3] transition-all cursor-pointer"
                                                     />
