@@ -8,7 +8,6 @@ export const auth = {
         Cookies.set("token", data.token, {
             expires: 7, // 7 days
             sameSite: "lax", // CSRF protection
-            secure: process.env.NODE_ENV === "production", // HTTPS only in production
         });
         Cookies.set("userId", data.userId, { expires: 7, sameSite: "lax" });
         Cookies.set("username", data.username, { expires: 7, sameSite: "lax" });
