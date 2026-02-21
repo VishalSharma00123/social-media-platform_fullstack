@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { Post } from "@/lib/types";
 import api from "@/lib/api";
 import { getMediaUrl } from "@/lib/config";
+import { User } from "@/lib/types"; // Import User type if available or just use any
 
 interface Props {
     post: Post;
@@ -14,8 +15,11 @@ interface Props {
 export default function PostCard({ post, onUpdate }: Props) {
     const [comment, setComment] = useState("");
     const [showComments, setShowComments] = useState(false);
-    const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
     const currentUser = auth.getUser();
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [shareUsers, setShareUsers] = useState<User[]>([]);
+    const [searchUser, setSearchUser] = useState("");
+    const [isSharing, setIsSharing] = useState(false);
 
 
 
@@ -88,23 +92,60 @@ export default function PostCard({ post, onUpdate }: Props) {
     const images = post.images || [];
     const video = post.videoUrl;
 
-    const handleShare = async () => {
-        const shareData = {
-            title: `Post by ${post.username}`,
-            text: post.content,
-            url: window.location.origin + `/profile/${post.username}`
-        };
+    const loadShareUsers = async (query?: string) => {
+        try {
+            const endpoint = query ? `/api/users/search?query=${query}` : `/api/users/suggestions`;
+            const response = await api.get(endpoint);
+            setShareUsers(response.data);
+        } catch (error) {
+            console.error("Failed to load users for sharing:", error);
+        }
+    };
 
-        if (navigator.share) {
-            try {
-                await navigator.share(shareData);
-            } catch (err) {
-                console.error("Error sharing:", err);
-            }
-        } else {
-            // Fallback: Copy to clipboard
-            navigator.clipboard.writeText(shareData.url);
-            alert("Link copied to clipboard!");
+    const handleShareClick = () => {
+        setShowShareModal(true);
+        loadShareUsers(); // Load users right when opened
+    };
+
+    const sendPostAsMessage = async (receiverId: string) => {
+        setIsSharing(true);
+        try {
+            const shareText = `Check out this post from @${post.username}: ${window.location.origin}/profile/${post.username}\n\n"${post.content}"`;
+            await api.post("/api/messages/send", {
+                receiverId,
+                content: shareText,
+                type: "TEXT"
+            });
+            alert("Post shared successfully!");
+            setShowShareModal(false);
+        } catch (err) {
+            console.error("Failed to send message:", err);
+            alert("Failed to share post.");
+        } finally {
+            setIsSharing(false);
+        }
+    };
+
+    const handleShareExternal = (platform: string) => {
+        const shareText = `Check out this post by ${post.username}: ${post.content}`;
+        const shareUrl = `${window.location.origin}/profile/${post.username}`;
+
+        switch (platform) {
+            case 'whatsapp':
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank");
+                break;
+            case 'instagram': // Insta has no formal web intents that work cleanly
+                navigator.clipboard.writeText(shareText + " " + shareUrl);
+                alert("Link copied! Open Instagram to paste and share.");
+                break;
+            default:
+                if (navigator.share) {
+                    navigator.share({ title: `Post by ${post.username}`, text: post.content, url: shareUrl });
+                } else {
+                    navigator.clipboard.writeText(shareUrl);
+                    alert("Link copied to clipboard!");
+                }
+                break;
         }
     };
 
@@ -152,7 +193,7 @@ export default function PostCard({ post, onUpdate }: Props) {
                                 src={getMediaUrl(url)}
                                 alt="Post content"
                                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 cursor-zoom-in"
-                                onClick={() => setEnlargedImage(getMediaUrl(url))}
+                                onClick={() => window.open(getMediaUrl(url), '_blank')}
                                 onError={(e) => {
                                     console.error("Image failed to load:", url);
                                     e.currentTarget.parentElement!.style.display = 'none';
@@ -198,7 +239,7 @@ export default function PostCard({ post, onUpdate }: Props) {
                         <span className="text-sm font-bold">{post.commentsCount}</span>
                     </button>
 
-                    <button onClick={handleShare} className="flex items-center space-x-2 px-4 py-2 rounded-xl text-surface-500 hover:bg-accent-pink/10 hover:text-accent-pink transition-all duration-300 group/share">
+                    <button onClick={handleShareClick} className="flex items-center space-x-2 px-4 py-2 rounded-xl text-surface-500 hover:bg-accent-pink/10 hover:text-accent-pink transition-all duration-300 group/share">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover/share:rotate-12 transition-transform"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
                         <span className="text-sm font-bold">{post.sharesCount}</span>
                     </button>
@@ -250,27 +291,68 @@ export default function PostCard({ post, onUpdate }: Props) {
                 </div>
             )}
 
-            {/* Image Modal */}
-            {enlargedImage && (
-                <div
-                    className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 md:p-12 cursor-zoom-out animate-in fade-in duration-300"
-                    onClick={() => setEnlargedImage(null)}
-                >
-                    <div className="relative w-full h-full flex items-center justify-center">
-                        <img
-                            src={enlargedImage}
-                            className="max-w-full max-h-full object-contain rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300"
-                            alt="Enlarged content"
-                        />
-                        <button
-                            className="absolute top-0 right-0 md:-top-4 md:-right-4 bg-surface-100/50 hover:bg-surface-200 text-white p-2 md:p-3 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setEnlargedImage(null);
-                            }}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            {/* Share Modal */}
+            {showShareModal && (
+                <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setShowShareModal(false)}>
+                    <div className="bg-surface-100 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setShowShareModal(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-surface-200">
+                            ✕
                         </button>
+                        <h3 className="text-xl font-black text-white mb-6 text-center">Share this Post</h3>
+
+                        <div className="flex justify-around mb-6 border-b border-surface-200 pb-6">
+                            <button onClick={() => handleShareExternal('whatsapp')} className="flex flex-col items-center gap-2 group">
+                                <div className="w-12 h-12 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                </div>
+                                <span className="text-xs font-bold text-surface-400">WhatsApp</span>
+                            </button>
+                            <button onClick={() => handleShareExternal('instagram')} className="flex flex-col items-center gap-2 group">
+                                <div className="w-12 h-12 rounded-full bg-pink-500/20 text-pink-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                                </div>
+                                <span className="text-xs font-bold text-surface-400">Instagram</span>
+                            </button>
+                            <button onClick={() => handleShareExternal('system')} className="flex flex-col items-center gap-2 group">
+                                <div className="w-12 h-12 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                </div>
+                                <span className="text-xs font-bold text-surface-400">Copy</span>
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                            <h4 className="text-xs font-black text-surface-400 uppercase tracking-widest">Send in App</h4>
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                value={searchUser}
+                                onChange={e => {
+                                    setSearchUser(e.target.value);
+                                    loadShareUsers(e.target.value);
+                                }}
+                                className="w-full bg-surface-200 border-none rounded-xl px-4 py-2 text-sm text-white focus:ring-2 focus:ring-primary-500 mb-2"
+                            />
+                            {shareUsers.map(user => (
+                                <div key={user.id} className="flex items-center justify-between group">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-10 h-10 rounded-full bg-surface-200 overflow-hidden flex items-center justify-center text-primary-500 font-bold">
+                                            {user.profilePicture ? (
+                                                <img src={getMediaUrl(user.profilePicture)} className="w-full h-full object-cover" />
+                                            ) : user.username.charAt(0).toUpperCase()}
+                                        </div>
+                                        <span className="font-bold text-sm text-white">@{user.username}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => sendPostAsMessage(user.id)}
+                                        disabled={isSharing}
+                                        className="bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold px-4 py-1.5 rounded-full transition-colors disabled:opacity-50"
+                                    >
+                                        Send
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}

@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         destination: "http://api-gateway:8080/files/:path*", // Strip /api prefix for files
       },
       {
+        source: "/api/ws/:path*",
+        destination: "http://api-gateway:8080/ws/:path*", // Strip /api prefix for websockets
+      },
+      {
         source: "/api/api/:path*",
         destination: "http://api-gateway:8080/api/:path*", // Strip double /api prefix
       },
