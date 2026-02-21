@@ -24,6 +24,8 @@ spring:
               - X-User-Id
             allowCredentials: true
             maxAge: 3600
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Headers Access-Control-Allow-Methods Access-Control-Expose-Headers, RETAIN_FIRST
 
   # Redis configuration
   data:
