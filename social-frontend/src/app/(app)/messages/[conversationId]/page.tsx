@@ -229,7 +229,7 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto h-[calc(100vh-140px)] flex flex-col bg-surface-100 rounded-3xl shadow-xl border border-surface-200 overflow-hidden animate-in">
+        <div className="max-w-4xl mx-auto h-[calc(100dvh-150px)] md:h-[calc(100vh-140px)] flex flex-col bg-surface-100 md:rounded-3xl shadow-xl border-y md:border border-surface-200 overflow-hidden animate-in -mx-4 md:mx-auto">
             {/* WebSocket Connection */}
             <ChatSocket onMessage={handleWebSocketMessage} />
 

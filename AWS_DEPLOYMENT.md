@@ -117,7 +117,7 @@ chmod 400 ~/.ssh/social-media-key.pem
 Replace `YOUR_IP` with the Public IPv4 address you copied in Step 1.5:
 
 ```bash
-  ssh -i ~/.ssh/social-media-key.pem ubuntu@YOUR_IP
+    
 ```
 
 - If it asks **"Are you sure you want to continue connecting?"**, type `yes` and press Enter.

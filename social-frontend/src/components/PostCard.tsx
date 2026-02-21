@@ -14,6 +14,7 @@ interface Props {
 export default function PostCard({ post, onUpdate }: Props) {
     const [comment, setComment] = useState("");
     const [showComments, setShowComments] = useState(false);
+    const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
     const currentUser = auth.getUser();
 
 
@@ -87,6 +88,26 @@ export default function PostCard({ post, onUpdate }: Props) {
     const images = post.images || [];
     const video = post.videoUrl;
 
+    const handleShare = async () => {
+        const shareData = {
+            title: `Post by ${post.username}`,
+            text: post.content,
+            url: window.location.origin + `/profile/${post.username}`
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                console.error("Error sharing:", err);
+            }
+        } else {
+            // Fallback: Copy to clipboard
+            navigator.clipboard.writeText(shareData.url);
+            alert("Link copied to clipboard!");
+        }
+    };
+
     return (
         <div className="glass-card mb-8 animate-fade-in group/card">
             {/* Header */}
@@ -131,6 +152,7 @@ export default function PostCard({ post, onUpdate }: Props) {
                                 src={getMediaUrl(url)}
                                 alt="Post content"
                                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 cursor-zoom-in"
+                                onClick={() => setEnlargedImage(getMediaUrl(url))}
                                 onError={(e) => {
                                     console.error("Image failed to load:", url);
                                     e.currentTarget.parentElement!.style.display = 'none';
@@ -176,7 +198,7 @@ export default function PostCard({ post, onUpdate }: Props) {
                         <span className="text-sm font-bold">{post.commentsCount}</span>
                     </button>
 
-                    <button className="flex items-center space-x-2 px-4 py-2 rounded-xl text-surface-500 hover:bg-accent-pink/10 hover:text-accent-pink transition-all duration-300 group/share">
+                    <button onClick={handleShare} className="flex items-center space-x-2 px-4 py-2 rounded-xl text-surface-500 hover:bg-accent-pink/10 hover:text-accent-pink transition-all duration-300 group/share">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover/share:rotate-12 transition-transform"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
                         <span className="text-sm font-bold">{post.sharesCount}</span>
                     </button>
@@ -199,7 +221,7 @@ export default function PostCard({ post, onUpdate }: Props) {
                                 <div className="flex-grow">
                                     <div className="bg-surface-200/70 backdrop-blur-sm px-4 py-2.5 rounded-2xl rounded-tl-none border border-surface-300/50 shadow-sm">
                                         <p className="text-xs font-black text-white mb-0.5">@{c.username}</p>
-                                        <p className="text-[13px] text-surface-300 leading-relaxed">{c.content}</p>
+                                        <p className="text-[13px] text-white leading-relaxed">{c.content}</p>
                                     </div>
                                     <div className="flex items-center mt-1 ml-1 space-x-4 opacity-0 group-hover/comment:opacity-100 transition-opacity">
                                         <button className="text-[10px] font-bold text-surface-500 hover:text-primary-500">Like</button>
@@ -225,6 +247,26 @@ export default function PostCard({ post, onUpdate }: Props) {
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
                         </button>
                     </div>
+                </div>
+            )}
+
+            {/* Image Modal */}
+            {enlargedImage && (
+                <div
+                    className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-in fade-in"
+                    onClick={() => setEnlargedImage(null)}
+                >
+                    <img
+                        src={enlargedImage}
+                        className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-in zoom-in-95 duration-200"
+                        alt="Enlarged content"
+                    />
+                    <button
+                        className="absolute top-4 right-4 bg-surface-100 text-white p-2 rounded-xl hover:bg-surface-200 transition-colors"
+                        onClick={() => setEnlargedImage(null)}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                 </div>
             )}
         </div>
