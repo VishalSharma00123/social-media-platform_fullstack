@@ -15,6 +15,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import org.springframework.lang.NonNull;
 
 @Component
 @RequiredArgsConstructor
@@ -30,13 +31,13 @@ public class JwtAuthenticationFilter implements WebFilter {
             "/api/messages/media", // Media files (loaded by <img>/<video> tags without auth)
             "/files", // Profile pictures
             "/uploads", // Post images/videos
-            "/ws", // WebSockets
+            "/ws", // WebSocket
             "/health",
             "/actuator",
             "/fallback");
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
 
         log.debug("🔐 JWT Filter processing: {}", path);
