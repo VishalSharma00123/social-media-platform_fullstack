@@ -253,20 +253,25 @@ export default function PostCard({ post, onUpdate }: Props) {
             {/* Image Modal */}
             {enlargedImage && (
                 <div
-                    className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out animate-in fade-in"
+                    className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 md:p-12 cursor-zoom-out animate-in fade-in duration-300"
                     onClick={() => setEnlargedImage(null)}
                 >
-                    <img
-                        src={enlargedImage}
-                        className="max-w-full max-h-full object-contain rounded-xl shadow-2xl animate-in zoom-in-95 duration-200"
-                        alt="Enlarged content"
-                    />
-                    <button
-                        className="absolute top-4 right-4 bg-surface-100 text-white p-2 rounded-xl hover:bg-surface-200 transition-colors"
-                        onClick={() => setEnlargedImage(null)}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
+                    <div className="relative w-full h-full flex items-center justify-center">
+                        <img
+                            src={enlargedImage}
+                            className="max-w-full max-h-full object-contain rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-300"
+                            alt="Enlarged content"
+                        />
+                        <button
+                            className="absolute top-0 right-0 md:-top-4 md:-right-4 bg-surface-100/50 hover:bg-surface-200 text-white p-2 md:p-3 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setEnlargedImage(null);
+                            }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

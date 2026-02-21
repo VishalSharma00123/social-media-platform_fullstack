@@ -58,7 +58,7 @@ public class NotificationService {
         Notification saved = notificationRepository.save(notification);
 
         // Send notifications based on settings
-        if (shouldSendInApp(settings, notification.getType())) {
+        if (notification.getType() != Notification.NotificationType.MESSAGE) {
             sendInAppNotification(saved);
         }
 
@@ -102,7 +102,7 @@ public class NotificationService {
         Notification saved = notificationRepository.save(notification);
 
         // Send notifications based on settings
-        if (shouldSendInApp(settings, notification.getType())) {
+        if (notification.getType() != Notification.NotificationType.MESSAGE) {
             sendInAppNotification(saved);
         }
 
@@ -146,7 +146,7 @@ public class NotificationService {
         Notification saved = notificationRepository.save(notification);
 
         // Send notifications based on settings
-        if (shouldSendInApp(settings, notification.getType())) {
+        if (notification.getType() != Notification.NotificationType.MESSAGE) {
             sendInAppNotification(saved);
         }
 
@@ -335,29 +335,6 @@ public class NotificationService {
                 return settings.isPushOnMention();
             case PICTURE_UPLOAD:
                 return settings.isPushOnMessage();
-            case LIKE_POST:
-                return settings.isInAppOnLike();
-            case COMMENT:
-                return settings.isInAppOnComment();
-            case MESSAGE:
-                return settings.isInAppOnMessage();
-            default:
-                return true;
-        }
-    }
-
-    private boolean shouldSendInApp(NotificationSettings settings, Notification.NotificationType type) {
-        switch (type) {
-            case FOLLOW:
-                return settings.isInAppOnFollow();
-            case LOGIN:
-                return settings.isInAppOnLogin();
-            case REGISTRATION:
-                return settings.isInAppOnRegistration();
-            case PROFILE_UPDATE:
-                return settings.isInAppOnMention();
-            case PICTURE_UPLOAD:
-                return settings.isInAppOnMessage();
             case LIKE_POST:
                 return settings.isInAppOnLike();
             case COMMENT:
