@@ -28,6 +28,9 @@ public class JwtAuthenticationFilter implements WebFilter {
             "/api/users/login",
             "/api/admin/auth/login",
             "/api/messages/media", // Media files (loaded by <img>/<video> tags without auth)
+            "/files", // Profile pictures
+            "/uploads", // Post images/videos
+            "/ws", // WebSockets
             "/health",
             "/actuator",
             "/fallback");
