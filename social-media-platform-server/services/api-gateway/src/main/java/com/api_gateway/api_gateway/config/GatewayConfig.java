@@ -81,6 +81,12 @@ public class GatewayConfig {
 
                                 .route("message-service-websocket", r -> r
                                                 .path("/ws/**")
+                                                .filters(f -> f
+                                                                .dedupeResponseHeader("Access-Control-Allow-Origin",
+                                                                                "RETAIN_FIRST")
+                                                                .dedupeResponseHeader(
+                                                                                "Access-Control-Allow-Credentials",
+                                                                                "RETAIN_FIRST"))
                                                 .uri("lb:ws://MESSAGE-SERVICE")) // ← Note: lb:ws://
 
                                 // Admin Service
