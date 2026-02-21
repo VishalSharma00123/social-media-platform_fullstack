@@ -7,6 +7,14 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/api/uploads/:path*",
+        destination: "http://api-gateway:8080/uploads/:path*", // Strip /api prefix for uploads
+      },
+      {
+        source: "/api/files/:path*",
+        destination: "http://api-gateway:8080/files/:path*", // Strip /api prefix for files
+      },
+      {
         source: "/api/api/:path*",
         destination: "http://api-gateway:8080/api/:path*", // Strip double /api prefix
       },
